@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # Allocate reactivity to emitted species
-# Version 0: Jane Coates 30/8/2014
+# Version 0: Jane Coates 4/9/2014
 
 use strict;
 use diagnostics;
@@ -11,7 +11,7 @@ use PDL::NiceSlice;
 use PDL::Bad;
 use Statistics::R;
 
-my $model_run = "/local/home/coates/MECCA/MCM_3.2_tagged";
+my $model_run = "/local/home/coates/Documents/OH_Reactivity";
 my $boxmodel = "$model_run/boxmodel";
 my $mecca = MECCA->new($boxmodel);
 my $eqn = "$model_run/gas.eqn";
@@ -35,6 +35,5 @@ foreach my $reaction (@$consumers) {
     next if isbad($rconst(-1));
     my $other_reactant_conc = $mecca->tracer($other_reactant) * $cair;
     my $reactivity = $rconst * $other_reactant_conc;
-    print "$reactivity\n";
-    #$total_reactivity += $reactivity;
+    $total_reactivity += $reactivity;
 }
