@@ -10,6 +10,7 @@ use PDL;
 use PDL::NiceSlice;
 use PDL::Bad;
 use Statistics::R;
+test
 
 my $model_run = "/local/home/coates/Documents/OH_Reactivity";
 my $boxmodel = "$model_run/boxmodel";
