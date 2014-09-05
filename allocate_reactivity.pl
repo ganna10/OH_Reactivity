@@ -40,8 +40,14 @@ foreach my $reaction (@$consumers) {
         $total_reactivity{$parent} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /CO\s\+\sOH/) {
         $total_reactivity{'CO'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /NO2\s\+\sOH/) {
+        $total_reactivity{'NO2'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /NO\s\+\sOH/) {
+        $total_reactivity{'NO'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /O3\s\+\sOH/) {
+        $total_reactivity{'O3'} += $reactivity(1:$ntime-2);
     } else {
-        $total_reactivity{$key_string} += $reactivity(1:$ntime-2); #change to inorganic??
+        $total_reactivity{$key_string} += $reactivity(1:$ntime-2); 
     }
 }
 
@@ -58,10 +64,13 @@ my @sorted_data = sort { &$sort_function($total_reactivity{$b}) <=> &$sort_funct
 
 my @final_sorted_data;
 foreach (@sorted_data) { 
-    next if ($_ eq 'Others') ;
+    next if ($_ eq 'Others' or $_ eq 'NO' or $_ eq 'NO2' or $_ eq 'O3') ;
     push @final_sorted_data, { $_ => $total_reactivity{$_} };
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
+unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
+unshift @final_sorted_data, { 'O3' => $total_reactivity{'O3'} } if (defined $total_reactivity{'O3'}); 
+unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
 
 my @plot_data;
 foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
@@ -133,20 +142,20 @@ $R->run(q` data = ddply(data, .(Time), colwise(sum)) `, #arrange data
 );
 
 $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
-                            "NO2 + OH = HNO3" = "#b569b3" ,
+                            "NO2" = "#b569b3" ,
                             "CH4" = "#1b695b" ,
                             "IC5H12" = "#ae4901" ,
                             "C3H8" = "#e7e85e" ,
                             "TOLUENE" = "#0e5c28" ,
                             "NC4H10" = "#f3aa7f" ,
                             "C2H4" = "#898989" ,
-                            "O3 + OH = HO2" = "#1c3e3d" ,
+                            "O3" = "#1c3e3d" ,
                             "NC5H12" = "#f9c500" ,
                             "C5H8" = "#8c1531" ,
                             "C2H6" = "#86b650" ,
                             "MXYL" = "#ef6638" ,
                             "C3H6" = "#0352cb" ,
-                            "NO + OH = HONO" = "#dc3522" ,
+                            "NO" = "#dc3522" ,
                             "NC6H14" = "#9bb18d" ,
                             "IC4H10" = "#a67c52" ,
                             "PXYL" = "#77aecc" ,
