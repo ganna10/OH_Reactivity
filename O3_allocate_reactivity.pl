@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# Allocate reactivity to emitted species
+# Allocate O3 reactivity to emitted species
 # Version 0: Jane Coates 4/9/2014
 
 use strict;
@@ -18,7 +18,7 @@ my $eqn = "$model_run/gas.eqn";
 my $kpp = KPP->new($eqn);
 my $ntime = $mecca->time->nelem;
 
-my $reactant = 'OH';
+my $reactant = 'O3';
 my $cair = $mecca->cair;
 my $consumers = $kpp->consuming($reactant);
 die "No reactions found for $reactant\n" if (@$consumers == 0) ;
@@ -26,6 +26,7 @@ die "No reactions found for $reactant\n" if (@$consumers == 0) ;
 my %total_reactivity;
 foreach my $reaction (@$consumers) {
     my $reactants = $kpp->reactants($reaction);
+    next if (scalar @$reactants == 1);
     my ($other_reactant) = grep { $_ ne $reactant } @$reactants;
     next if $other_reactant eq 'hv';
     my $rnum = $kpp->reaction_number($reaction);
@@ -38,20 +39,22 @@ foreach my $reaction (@$consumers) {
     my $key_string = $kpp->reaction_string($reaction);
     if ($key_string =~ /_/) {
         $total_reactivity{$parent} += $reactivity(1:$ntime-2);
-    } elsif ($key_string =~ /CO\s\+\sOH/) {
-        $total_reactivity{'CO'} += $reactivity(1:$ntime-2);
-    } elsif ($key_string =~ /NO2\s\+\sOH/) {
-        $total_reactivity{'NO2'} += $reactivity(1:$ntime-2);
-    } elsif ($key_string =~ /NO\s\+\sOH/) {
-        $total_reactivity{'NO'} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /O3\s\+\sOH/) {
-        $total_reactivity{'O3'} += $reactivity(1:$ntime-2);
+        $total_reactivity{'OH'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /NO2\s\+\sO3/) {
+        $total_reactivity{'NO2'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /NO\s\+\sO3/) {
+        $total_reactivity{'NO'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /HO2\s\+\sO3/) {
+        $total_reactivity{'HO2'} += $reactivity(1:$ntime-2);
+    } elsif ($key_string =~ /O\s\+\sO3/) {
+        $total_reactivity{'O'} += $reactivity(1:$ntime-2);
     } else {
         $total_reactivity{$key_string} += $reactivity(1:$ntime-2); 
     }
 }
 
-my $others_max = 12;
+my $others_max = 1e-8;
 foreach my $process (keys %total_reactivity) {
     if ($total_reactivity{$process}->sum <= $others_max) {
         $total_reactivity{'Others'} += $total_reactivity{$process};
@@ -64,13 +67,15 @@ my @sorted_data = sort { &$sort_function($total_reactivity{$b}) <=> &$sort_funct
 
 my @final_sorted_data;
 foreach (@sorted_data) { 
-    next if ($_ eq 'Others' or $_ eq 'NO' or $_ eq 'NO2' or $_ eq 'O3') ;
+    next if ($_ eq 'Others' or $_ eq 'NO' or $_ eq 'NO2' or $_ eq 'OH' or $_ eq 'HO2' or $_ eq 'O') ;
     push @final_sorted_data, { $_ => $total_reactivity{$_} };
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
-unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
-unshift @final_sorted_data, { 'O3' => $total_reactivity{'O3'} } if (defined $total_reactivity{'O3'}); 
+unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
+unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
+unshift @final_sorted_data, { 'O' => $total_reactivity{'O'} } if (defined $total_reactivity{'O'}); 
 unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
+unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
 
 my @plot_data;
 foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
@@ -132,7 +137,7 @@ foreach my $ref (@plot_data) {
     foreach my $process (sort keys %$ref) {
         $R->set('Process', $process);
         $R->set('Reactivity', [@{$ref->{$process}}]);
-        $R->run(q` data[Process] = Reactivity `);
+        $R->run(q` data[Process] = Reactivity * 1e4 `);
     }
 }
 
@@ -149,7 +154,7 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "TOLUENE" = "#0e5c28" ,
                             "NC4H10" = "#f3aa7f" ,
                             "C2H4" = "#898989" ,
-                            "O3" = "#1c3e3d" ,
+                            "HO2" = "#2c9daf" ,
                             "NC5H12" = "#f9c500" ,
                             "C5H8" = "#8c1531" ,
                             "C2H6" = "#86b650" ,
@@ -162,6 +167,10 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "BENZENE" = "#f7c56c" ,
                             "OXYL" = "#4c9383" ,
                             "EBENZ" = "#ba8b01" ,
+                            "O" = "#8d1435" ,
+                            "OH" = "#6db875" ,
+                            "BUT1ENE" = "#77afc8" ,
+                            "MEPROPENE" = "#cc6329" ,
                             "Others" = "#58691b" ) `,
         q` my.names = c(    "CH4" = "Methane" ,
                             "IC5H12" = "2-Methyl Butane" ,
@@ -179,15 +188,17 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "PXYL" = "p-Xylene" ,
                             "BENZENE" = "Benzene" ,
                             "OXYL" = "o-Xylene" ,
+                            "BUT1ENE" = "1-Butene",
+                            "MEPROPENE" = "2-Methyl Propene",
                             "EBENZ" = "Ethylbenzene") `,
 );
 
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 250), breaks = seq(0, 250, 50)) `,
-        q` plot = plot + ggtitle("OH Reactivity") `,
-        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ")"))) `,
+        #q` plot = plot + scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5)) `,
+        q` plot = plot + ggtitle("O3 Reactivity") `,
+        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ") x ", 10^4))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 22, face = "bold")) `,
         q` plot = plot + theme(axis.title.x = element_blank()) `,
@@ -201,12 +212,12 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
-$R->run(q` CairoPDF(file = "OH_reactivity_allocation.pdf", width = 20, height = 14) `, #save plot to file
+$R->run(q` CairoPDF(file = "O3_reactivity_allocation.pdf", width = 20, height = 14) `, #save plot to file
         q` print(plot) `,
         q` dev.off() `,
 );
 
-#my $p = $R->run(q` print(data) `);
-#print "$p\n";
+my $p = $R->run(q` print(data) `);
+print "$p\n";
 
 $R->stop;
