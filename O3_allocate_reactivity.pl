@@ -196,7 +196,7 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        #q` plot = plot + scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.5)) `,
+        q` plot = plot + scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 20)) `,
         q` plot = plot + ggtitle("O3 Reactivity") `,
         q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ") x ", 10^4))) `,
         q` plot = plot + theme_bw() `,
@@ -217,7 +217,7 @@ $R->run(q` CairoPDF(file = "O3_reactivity_allocation.pdf", width = 20, height = 
         q` dev.off() `,
 );
 
-my $p = $R->run(q` print(data) `);
-print "$p\n";
+#my $p = $R->run(q` print(data) `);
+#print "$p\n";
 
 $R->stop;
