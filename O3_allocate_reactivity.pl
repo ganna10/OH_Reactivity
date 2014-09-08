@@ -74,8 +74,6 @@ push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined
 unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
 unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
 unshift @final_sorted_data, { 'O' => $total_reactivity{'O'} } if (defined $total_reactivity{'O'}); 
-unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
-unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
 
 my @plot_data;
 foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
@@ -137,7 +135,7 @@ foreach my $ref (@plot_data) {
     foreach my $process (sort keys %$ref) {
         $R->set('Process', $process);
         $R->set('Reactivity', [@{$ref->{$process}}]);
-        $R->run(q` data[Process] = Reactivity * 1e4 `);
+        $R->run(q` data[Process] = Reactivity * 1e5 `);
     }
 }
 
@@ -196,9 +194,9 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 80), breaks = seq(0, 80, 20)) `,
+        q` plot = plot + scale_y_continuous(limits = c(0, 6), breaks = seq(0, 6, 1)) `,
         q` plot = plot + ggtitle("O3 Reactivity") `,
-        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ") x ", 10^4))) `,
+        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ") x ", 10^5))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 22, face = "bold")) `,
         q` plot = plot + theme(axis.title.x = element_blank()) `,
@@ -212,7 +210,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
-$R->run(q` CairoPDF(file = "O3_reactivity_allocation.pdf", width = 20, height = 14) `, #save plot to file
+$R->run(q` CairoPDF(file = "O3_reactivity_allocation_without_NOx.pdf", width = 20, height = 14) `, #save plot to file
         q` print(plot) `,
         q` dev.off() `,
 );
