@@ -13,6 +13,59 @@ use Statistics::R;
 
 my $VOC = $ARGV[0];
 print "$VOC\n";
+my ($name, $others_max, $y_max, $breaks) = get_data($VOC);
+
+sub get_data {
+    my ($VOC) = @_;
+    my ($name, $others_max, $y_max, $breaks);
+    if ($VOC eq 'CH4') {
+        $name = "Methane"; $others_max = 12; $y_max = 18 ; $breaks = 5;
+    } elsif ($VOC eq 'C2H6') {
+        $name = "Ethane"; $others_max = 10; $y_max = 3 ; $breaks = 1;
+    } elsif ($VOC eq 'C3H8') {
+        $name = "Propane"; $others_max = 8; $y_max = 8 ; $breaks = 2;
+    } elsif ($VOC eq 'NC4H10') {
+        $name = "Butane"; $others_max = 8; $y_max = 8 ; $breaks = 2;
+    } elsif ($VOC eq 'IC4H10') {
+        $name = "2-Methyl Propane"; $others_max = 4; $y_max = 4 ; $breaks = 1;
+    } elsif ($VOC eq 'NC5H12') {
+        $name = "Pentane"; $others_max = 1; $y_max = 8 ; $breaks = 2;
+    } elsif ($VOC eq 'IC5H12') {
+        $name = "2-Methyl Butane"; $others_max = 10; $y_max = 16; $breaks = 4;
+    } elsif ($VOC eq 'NC6H14') {
+        $name = "Hexane"; $others_max = 1; $y_max = 4 ; $breaks = 1;
+    } elsif ($VOC eq 'NC7H16') {
+        $name = "Heptane"; $others_max = 0.4; $y_max = 2 ; $breaks = 0.5;
+    } elsif ($VOC eq 'NC8H18') {
+        $name = "Octane"; $others_max = 0.3; $y_max = 1.5 ; $breaks = 0.5;
+    } elsif ($VOC eq 'C2H4') {
+        $name = "Ethene"; $others_max = 12; $y_max = 25 ; $breaks = 5;
+    } elsif ($VOC eq 'C3H6') {
+        $name = "Propene"; $others_max = 4; $y_max = 15 ; $breaks = 5;
+    } elsif ($VOC eq 'BUT1ENE') {
+        $name = "1-Butene"; $others_max = 1; $y_max = 3 ; $breaks = 1;
+    } elsif ($VOC eq 'MEPROPENE') {
+        $name = "2-Methyl Propene"; $others_max = 1; $y_max = 5 ; $breaks = 1;
+    } elsif ($VOC eq 'C5H8') {
+        $name = "Isopene"; $others_max = 0.3; $y_max = 25 ; $breaks = 5;
+    } elsif ($VOC eq 'BENZENE') {
+        $name = "Benzene"; $others_max = 0.5; $y_max = 1.5 ; $breaks = 0.5;
+    } elsif ($VOC eq 'TOLUENE') {
+        $name = "Toluene"; $others_max = 2; $y_max = 15 ; $breaks = 5;
+    } elsif ($VOC eq 'MXYL') {
+        $name = "m-Xylene"; $others_max = 2; $y_max = 15 ; $breaks = 5;
+    } elsif ($VOC eq 'OXYL') {
+        $name = "o-Xylene"; $others_max = 2; $y_max = 5 ; $breaks = 1;
+    } elsif ($VOC eq 'PXYL') {
+        $name = "p-Xylene"; $others_max = 2; $y_max = 6 ; $breaks = 2;
+    } elsif ($VOC eq 'EBENZ') {
+        $name = "Ethylbenzene"; $others_max = 2; $y_max = 4 ; $breaks = 1;
+    } else {
+        print "No data found for $VOC\n";
+    }
+    return ($name, $others_max, $y_max, $breaks);
+}
+
 my $model_run = "/local/home/coates/Documents/OH_Reactivity";
 my $boxmodel = "$model_run/boxmodel";
 my $mecca = MECCA->new($boxmodel);
@@ -27,6 +80,8 @@ die "No reactions found for $reactant\n" if (@$consumers == 0) ;
 
 my %total_reactivity;
 foreach my $reaction (@$consumers) {
+    my ($number, $parent) = split /_/, $reaction;
+    next unless (defined $parent and $parent eq $VOC);
     my $reactants = $kpp->reactants($reaction);
     my ($other_reactant) = grep { $_ ne $reactant } @$reactants;
     next if $other_reactant eq 'hv';
@@ -36,18 +91,10 @@ foreach my $reaction (@$consumers) {
     my $other_reactant_conc = $mecca->tracer($other_reactant) * $cair;
     my $reactivity = $rconst * $other_reactant_conc;
     next if ($reactivity->sum == 0);
-    my ($number, $parent) = split /_/, $reaction;
-    my $key_string = $kpp->reaction_string($reaction);
-    if ($key_string =~ /_/) {
-        $total_reactivity{$parent} += $reactivity(1:$ntime-2);
-    } elsif ($key_string =~ /CO\s\+\sOH/) {
-        $total_reactivity{'CO'} += $reactivity(1:$ntime-2);
-    } else {
-        $total_reactivity{$key_string} += $reactivity(1:$ntime-2); 
-    }
+    $other_reactant =~ s/_(.*?)$//g;
+    $total_reactivity{$other_reactant} += $reactivity(1:$ntime-2);
 }
 
-my $others_max = 12;
 foreach my $process (keys %total_reactivity) {
     if ($total_reactivity{$process}->sum <= $others_max) {
         $total_reactivity{'Others'} += $total_reactivity{$process};
@@ -122,16 +169,16 @@ $R->run(q` library(ggplot2) `,
 $R->set('Time', [@time_blocks]);
 $R->run(q` data = data.frame(Time) `);
 foreach my $ref (@plot_data) {
-    foreach my $process (sort keys %$ref) {
-        $R->set('Process', $process);
-        $R->set('Reactivity', [@{$ref->{$process}}]);
-        $R->run(q` data[Process] = Reactivity `);
+    foreach my $reactant (sort keys %$ref) {
+        $R->set('Reactant', $reactant);
+        $R->set('Reactivity', [@{$ref->{$reactant}}]);
+        $R->run(q` data[Reactant] = Reactivity `);
     }
 }
 
 $R->run(q` data = ddply(data, .(Time), colwise(sum)) `, #arrange data
-        q` data = melt(data, id.vars = c("Time"), variable.name = "Process", value.name = "Reactivity") `,
-        q` data$Process = factor(data$Process, levels = rev(levels(data$Process))) `,
+        q` data = melt(data, id.vars = c("Time"), variable.name = "Reactant", value.name = "Reactivity") `,
+        q` data$Reactant = factor(data$Reactant, levels = rev(levels(data$Reactant))) `,
 );
 
 $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
@@ -175,11 +222,13 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "EBENZ" = "Ethylbenzene") `,
 );
 
-$R->set('title', "OH Reactivity during $VOC Degradation");
-$R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
+$R->set('title', "OH Reactivity during $name Degradation");
+$R->set('y.max', $y_max);
+$R->set('breaks', $breaks);
+$R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Reactant)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        #q` plot = plot + scale_y_continuous(limits = c(0, 250), breaks = seq(0, 250, 50)) `,
+        q` plot = plot + scale_y_continuous(limits = c(0, y.max), breaks = seq(0, y.max, breaks)) `,
         q` plot = plot + ggtitle(title) `,
         q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ")"))) `,
         q` plot = plot + theme_bw() `,
