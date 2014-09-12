@@ -40,7 +40,7 @@ foreach my $reaction (@$consumers) {
     if ($key_string =~ /_/) {
         $total_reactivity{$parent} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO3\s\+\sOH/) {
-        $total_reactivity{'OH'} += $reactivity(1:$ntime-2);
+        #$total_reactivity{'OH'} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO2\s\+\sNO3/) {
         $total_reactivity{'NO2'} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO\s\+\sNO3/) {
@@ -192,18 +192,20 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
         q` plot = plot + scale_y_continuous(limits = c(0, 1.5), breaks = seq(0, 1.5, 0.5)) `,
-        q` plot = plot + ggtitle("NO3 Reactivity") `,
-        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ")"))) `,
+        q` plot = plot + ggtitle("NO3 Reactivity Allocated by VOC Contributions\n") `,
+        q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ")")))) `,
         q` plot = plot + theme_bw() `,
-        q` plot = plot + theme(plot.title = element_text(size = 22, face = "bold")) `,
+        q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
         q` plot = plot + theme(axis.title.x = element_blank()) `,
-        q` plot = plot + theme(axis.title.y = element_text(size = 20, face = "bold")) `,
-        q` plot = plot + theme(axis.text.x = element_text(size = 18)) `,
-        q` plot = plot + theme(axis.text.y = element_text(size = 18)) `,
+        q` plot = plot + theme(axis.title.y = element_text(size = 25, face = "bold")) `,
+        q` plot = plot + theme(axis.text.x = element_text(size = 20)) `,
+        q` plot = plot + theme(axis.text.y = element_text(size = 20)) `,
         q` plot = plot + theme(legend.title = element_blank()) `,
-        q` plot = plot + theme(legend.text = element_text(size = 18)) `,
+        q` plot = plot + theme(legend.text = element_text(size = 20)) `,
         q` plot = plot + theme(legend.key = element_blank()) `,
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
+        q` plot = plot + theme(panel.grid.major = element_blank()) `,
+        q` plot = plot + theme(panel.grid.minor = element_blank()) `,
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
@@ -211,8 +213,5 @@ $R->run(q` CairoPDF(file = "NO3_reactivity_allocation_without_NOx.pdf", width = 
         q` print(plot) `,
         q` dev.off() `,
 );
-
-#my $p = $R->run(q` print(data) `);
-#print "$p\n";
 
 $R->stop;
