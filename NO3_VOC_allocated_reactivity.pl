@@ -51,7 +51,7 @@ sub get_data {
     } elsif ($VOC eq 'BENZENE') {
         $name = "Benzene"; $others_max = 0.5; $y_max = 1.5 ; $breaks = 0.5;
     } elsif ($VOC eq 'TOLUENE') {
-        $name = "Toluene"; $others_max = 2e-2; $y_max = 1 ; $breaks = 0.5;
+        $name = "Toluene"; $others_max = 7e-3; $y_max = 0.5 ; $breaks = 0.1;
     } elsif ($VOC eq 'MXYL') {
         $name = "m-Xylene"; $others_max = 2e-2; $y_max = 1 ; $breaks = 0.5;
     } elsif ($VOC eq 'OXYL') {
@@ -197,11 +197,11 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "C3H6" = "#0352cb" ,
                             "NO" = "#dc3522" ,
                             "NC6H14" = "#9bb18d" ,
-                            "IC4H10" = "#a67c52" ,
-                            "PXYL" = "#77aecc" ,
-                            "BENZENE" = "#f7c56c" ,
-                            "OXYL" = "#4c9383" ,
-                            "EBENZ" = "#ba8b01" ,
+                            "PXYFUONE" = "#a67c52" ,
+                            "TLFUONE" = "#77aecc" ,
+                            "MNCATECH" = "#8c1531" ,
+                            "CRESOL" = "#4c9383" ,
+                            "MCATECHOL" = "#ba8b01" ,
                             "Others" = "#58691b" ) `,
         q` my.names = c(    "CH4" = "Methane" ,
                             "IC5H12" = "2-Methyl Butane" ,
@@ -222,7 +222,7 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "EBENZ" = "Ethylbenzene") `,
 );
 
-$R->set('title', "NO3 Reactivity during $name Degradation");
+$R->set('title', "NO3 Reactivity of $name Degradation Products\n");
 $R->set('y.max', $y_max);
 $R->set('breaks', $breaks);
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Reactant)) `, #plot data
@@ -230,18 +230,22 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = React
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
         q` plot = plot + scale_y_continuous(limits = c(0, y.max), breaks = seq(0, y.max, breaks)) `,
         q` plot = plot + ggtitle(title) `,
-        q` plot = plot + ylab(expression(paste("Reactivity (", s^-1, ")"))) `,
+        q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ")")))) `,
         q` plot = plot + theme_bw() `,
-        q` plot = plot + theme(plot.title = element_text(size = 22, face = "bold")) `,
+        q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
         q` plot = plot + theme(axis.title.x = element_blank()) `,
-        q` plot = plot + theme(axis.title.y = element_text(size = 20, face = "bold")) `,
-        q` plot = plot + theme(axis.text.x = element_text(size = 18)) `,
-        q` plot = plot + theme(axis.text.y = element_text(size = 18)) `,
+        q` plot = plot + theme(axis.title.y = element_text(size = 25, face = "bold")) `,
+        q` plot = plot + theme(axis.text.x = element_text(size = 20)) `,
+        q` plot = plot + theme(axis.text.y = element_text(size = 20)) `,
         q` plot = plot + theme(legend.title = element_blank()) `,
-        q` plot = plot + theme(legend.text = element_text(size = 18)) `,
+        q` plot = plot + theme(legend.text = element_text(size = 20)) `,
         q` plot = plot + theme(legend.key = element_blank()) `,
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
-        #q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
+        q` plot = plot + theme(panel.grid.major = element_blank()) `,
+        q` plot = plot + theme(panel.grid.minor = element_blank()) `,
+        q` plot = plot + theme(legend.position = c(0.99, 0.99)) `,
+        q` plot = plot + theme(legend.justification = c(0.99, 0.99)) `,
+        q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
 $R->set('filename', "${VOC}_NO3_reactivity.pdf");
