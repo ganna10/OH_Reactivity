@@ -206,6 +206,8 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
         q` plot = plot + theme(panel.grid.major = element_blank()) `,
         q` plot = plot + theme(panel.grid.minor = element_blank()) `,
+        q` plot = plot + theme(legend.position = c(0.99, 0.99)) `,
+        q` plot = plot + theme(legend.justification = c(0.99, 0.99)) `,
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
