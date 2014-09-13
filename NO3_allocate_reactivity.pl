@@ -70,7 +70,8 @@ foreach (@sorted_data) {
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
 unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
-unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
+unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
+unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
 
 my @plot_data;
 foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
@@ -155,10 +156,10 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "C2H6" = "#86b650" ,
                             "MXYL" = "#ef6638" ,
                             "C3H6" = "#0352cb" ,
-                            "NO" = "#dc3522" ,
+                            "NO" = "#c9a415" ,
                             "NC6H14" = "#9bb18d" ,
                             "IC4H10" = "#a67c52" ,
-                            "PXYL" = "#77aecc" ,
+                            "PXYL" = "#dc3522" ,
                             "BENZENE" = "#f7c56c" ,
                             "OXYL" = "#4c9383" ,
                             "EBENZ" = "#ba8b01" ,
@@ -191,8 +192,8 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 1.5), breaks = seq(0, 1.5, 0.5)) `,
-        q` plot = plot + ggtitle("NO3 Reactivity Allocated by VOC Contributions\n") `,
+        q` plot = plot + scale_y_continuous(limits = c(0, 16), breaks = seq(0, 16, 4)) `,
+        q` plot = plot + ggtitle("NO3 Reactivity Allocated to All Contributors\n") `,
         q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ")")))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
@@ -206,12 +207,12 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
         q` plot = plot + theme(panel.grid.major = element_blank()) `,
         q` plot = plot + theme(panel.grid.minor = element_blank()) `,
-        q` plot = plot + theme(legend.position = c(0.99, 0.99)) `,
-        q` plot = plot + theme(legend.justification = c(0.99, 0.99)) `,
+        q` plot = plot + theme(panel.border = element_blank()) `,
+        q` plot = plot + theme(axis.line = element_line(colour = "black")) `,
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
-$R->run(q` CairoPDF(file = "NO3_reactivity_allocation_without_NOx.pdf", width = 20, height = 14) `, #save plot to file
+$R->run(q` CairoPDF(file = "NO3_reactivity_allocation.pdf", width = 20, height = 14) `, #save plot to file
         q` print(plot) `,
         q` dev.off() `,
 );
