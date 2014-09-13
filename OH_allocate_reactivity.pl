@@ -68,8 +68,8 @@ foreach (@sorted_data) {
     push @final_sorted_data, { $_ => $total_reactivity{$_} };
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
-unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
 unshift @final_sorted_data, { 'O3' => $total_reactivity{'O3'} } if (defined $total_reactivity{'O3'}); 
+unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
 unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
 
 my @plot_data;
@@ -155,10 +155,10 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "C2H6" = "#86b650" ,
                             "MXYL" = "#ef6638" ,
                             "C3H6" = "#0352cb" ,
-                            "NO" = "#dc3522" ,
+                            "NO" = "#c9a415" ,
                             "NC6H14" = "#9bb18d" ,
                             "IC4H10" = "#a67c52" ,
-                            "PXYL" = "#77aecc" ,
+                            "PXYL" = "#dc3522" ,
                             "BENZENE" = "#f7c56c" ,
                             "OXYL" = "#4c9383" ,
                             "EBENZ" = "#ba8b01" ,
@@ -200,6 +200,8 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
         q` plot = plot + theme(panel.grid.major = element_blank()) `,
         q` plot = plot + theme(panel.grid.minor = element_blank()) `,
+        q` plot = plot + theme(panel.border = element_blank()) `,
+        q` plot = plot + theme(axis.line = element_line(colour = "black")) `,
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
