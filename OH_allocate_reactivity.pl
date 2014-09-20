@@ -186,7 +186,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
         q` plot = plot + scale_y_continuous(limits = c(0, 250), breaks = seq(0, 250, 50)) `,
-        q` plot = plot + ggtitle("OH Reactivity Distributed by Inorganic and Allocated VOC Contributions\n") `,
+        q` plot = plot + ggtitle("OH Reactivity Distributed by Inorganic and Allocated VOC Contributions") `,
         q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ")")))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
