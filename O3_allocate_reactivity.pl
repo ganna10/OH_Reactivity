@@ -71,8 +71,8 @@ foreach (@sorted_data) {
     push @final_sorted_data, { $_ => $total_reactivity{$_} };
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
-unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
-unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
+#unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
+#unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
 #unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
 #unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
 
@@ -195,8 +195,8 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Process)) `, #plot data
         q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
         q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 5.3), breaks = seq(0, 5.3, 1)) `,
-        q` plot = plot + ggtitle("Allocated O3 Reactivity without NOx Contribution\n") `,
+        q` plot = plot + scale_y_continuous(limits = c(0, 3), breaks = seq(0, 3, 1)) `,
+        q` plot = plot + ggtitle("Allocated O3 Reactivity without NOx and HOx Contributions\n") `,
         q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ") x ", 10^5)))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
