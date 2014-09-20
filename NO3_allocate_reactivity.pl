@@ -40,7 +40,7 @@ foreach my $reaction (@$consumers) {
     if ($key_string =~ /_/) {
         $total_reactivity{$parent} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO3\s\+\sOH/) {
-        #$total_reactivity{'OH'} += $reactivity(1:$ntime-2);
+        $total_reactivity{'OH'} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO2\s\+\sNO3/) {
         $total_reactivity{'NO2'} += $reactivity(1:$ntime-2);
     } elsif ($key_string =~ /NO\s\+\sNO3/) {
@@ -69,9 +69,10 @@ foreach (@sorted_data) {
     push @final_sorted_data, { $_ => $total_reactivity{$_} };
 } 
 push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
-#unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
-#unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
-#unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
+unshift @final_sorted_data, { 'OH' => $total_reactivity{'OH'} } if (defined $total_reactivity{'OH'}); 
+unshift @final_sorted_data, { 'HO2' => $total_reactivity{'HO2'} } if (defined $total_reactivity{'HO2'}); 
+unshift @final_sorted_data, { 'NO' => $total_reactivity{'NO'} } if (defined $total_reactivity{'NO'}); 
+unshift @final_sorted_data, { 'NO2' => $total_reactivity{'NO2'} } if (defined $total_reactivity{'NO2'}); 
 
 my @plot_data;
 foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
@@ -160,8 +161,8 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + geom_area(position = "stack") `,
         q` plot = plot + geom_area(position = "stack", colour = "black", show_guide = FALSE) `,
         q` plot = plot + scale_x_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 9), breaks = seq(0, 9, 1)) `,
-        q` plot = plot + ggtitle("Allocated NO3 Reactivity without NOx and HOx Contributions") `,
+        q` plot = plot + scale_y_continuous(limits = c(0, 75), breaks = seq(0, 75, 20)) `,
+        q` plot = plot + ggtitle("Allocated NO3 Reactivity to all Contributions") `,
         q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ") x ", 10^2)))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
@@ -180,7 +181,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
-$R->run(q` CairoPDF(file = "NO3_reactivity_allocation_without_NOx.pdf", width = 20, height = 14) `, #save plot to file
+$R->run(q` CairoPDF(file = "NO3_reactivity_allocation.pdf", width = 20, height = 14) `, #save plot to file
         q` print(plot) `,
         q` dev.off() `,
 );
