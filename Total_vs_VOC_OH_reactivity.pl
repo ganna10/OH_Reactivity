@@ -64,10 +64,12 @@ foreach my $item (sort keys %total_reactivity) {
     $R->run(q` data[run] = reactivity `);
 }
 
+$R->run(q` data$Total = data$Total - data$Parents `);
 $R->run(q` data = melt(data, id.vars = c("Time"), variable.name = "Run", value.name = "OH.Reactivity") `);
 
-$R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, colour = Run)) `,
-        q` plot = plot + geom_line(size = 2) `,
+$R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
+        q` plot = plot + geom_area(position = "stack") `,
+        q` plot = plot + geom_area(position = "stack", colour = "black", show_guide = FALSE) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + xlab("Time (days)") `,
         q` plot = plot + ylab(expression(bold(paste("OH Reactivity (", s^-1, ")")))) `,
@@ -89,7 +91,7 @@ $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, colour = Run)) `
         q` plot = plot + theme(legend.position = c(0.99, 0.5)) `,
         q` plot = plot + theme(legend.justification = c(0.99, 0.5)) `,
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
-        q` plot = plot + scale_colour_manual(values = c("#2b9eb3", "#8c1531"), breaks = rev(levels(data$Run)), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity")) `,
+        q` plot = plot + scale_fill_manual(values = c("#2b9eb3", "#8c1531"), breaks = rev(levels(data$Run)), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity")) `,
 );
 
 $R->run(q` CairoPDF(file = "Total_vs_parents_OH_reactivity.pdf", width = 20, height = 14) `,
