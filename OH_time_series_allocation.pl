@@ -154,7 +154,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + geom_area(position = "stack", colour = "black", show_guide = FALSE) `,
         q` plot = plot + scale_x_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) `,
         q` plot = plot + scale_y_continuous(limits = c(0, 8.5), breaks = seq(0, 8.5, 2)) `,
-        q` plot = plot + ggtitle("Total OH Reactivity Allocated by Inorganic and Allocated VOC Contributions\n") `,
+        q` plot = plot + ggtitle("Total OH Reactivity Allocated by Inorganic and VOC Contributions") `,
         q` plot = plot + ylab(expression(bold(paste("OH Reactivity (", s^-1, ")")))) `,
         q` plot = plot + xlab("Time (days)") `,
         q` plot = plot + theme_bw() `,
