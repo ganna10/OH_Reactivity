@@ -11,61 +11,6 @@ use PDL::NiceSlice;
 use PDL::Bad;
 use Statistics::R;
 
-my $VOC = $ARGV[0];
-print "$VOC\n";
-my ($name, $others_max, $y_max, $breaks) = get_data($VOC);
-
-sub get_data {
-    my ($VOC) = @_;
-    my ($name, $others_max, $y_max, $breaks);
-    if ($VOC eq 'CH4') {
-        $name = "Methane"; $others_max = 12; $y_max = 18 ; $breaks = 5;
-    } elsif ($VOC eq 'C2H6') {
-        $name = "Ethane"; $others_max = 10; $y_max = 3 ; $breaks = 1;
-    } elsif ($VOC eq 'C3H8') {
-        $name = "Propane"; $others_max = 8; $y_max = 8 ; $breaks = 2;
-    } elsif ($VOC eq 'NC4H10') {
-        $name = "Butane"; $others_max = 8; $y_max = 8 ; $breaks = 2;
-    } elsif ($VOC eq 'IC4H10') {
-        $name = "2-Methyl Propane"; $others_max = 4; $y_max = 4 ; $breaks = 1;
-    } elsif ($VOC eq 'NC5H12') {
-        $name = "Pentane"; $others_max = 1; $y_max = 8 ; $breaks = 2;
-    } elsif ($VOC eq 'IC5H12') {
-        $name = "2-Methyl Butane"; $others_max = 10; $y_max = 16; $breaks = 4;
-    } elsif ($VOC eq 'NC6H14') {
-        $name = "Hexane"; $others_max = 1; $y_max = 4 ; $breaks = 1;
-    } elsif ($VOC eq 'NC7H16') {
-        $name = "Heptane"; $others_max = 0.4; $y_max = 2 ; $breaks = 0.5;
-    } elsif ($VOC eq 'NC8H18') {
-        $name = "Octane"; $others_max = 0.3; $y_max = 1.5 ; $breaks = 0.5;
-    } elsif ($VOC eq 'C2H4') {
-        $name = "Ethene"; $others_max = 12; $y_max = 25 ; $breaks = 5;
-    } elsif ($VOC eq 'C3H6') {
-        $name = "Propene"; $others_max = 4; $y_max = 15 ; $breaks = 5;
-    } elsif ($VOC eq 'BUT1ENE') {
-        $name = "1-Butene"; $others_max = 1; $y_max = 3 ; $breaks = 1;
-    } elsif ($VOC eq 'MEPROPENE') {
-        $name = "2-Methyl Propene"; $others_max = 1; $y_max = 5 ; $breaks = 1;
-    } elsif ($VOC eq 'C5H8') {
-        $name = "Isopene"; $others_max = 0.3; $y_max = 25 ; $breaks = 5;
-    } elsif ($VOC eq 'BENZENE') {
-        $name = "Benzene"; $others_max = 0.5; $y_max = 1.5 ; $breaks = 0.5;
-    } elsif ($VOC eq 'TOLUENE') {
-        $name = "Toluene"; $others_max = 7e-3; $y_max = 0.5 ; $breaks = 0.1;
-    } elsif ($VOC eq 'MXYL') {
-        $name = "m-Xylene"; $others_max = 2e-2; $y_max = 1 ; $breaks = 0.5;
-    } elsif ($VOC eq 'OXYL') {
-        $name = "o-Xylene"; $others_max = 2; $y_max = 5 ; $breaks = 1;
-    } elsif ($VOC eq 'PXYL') {
-        $name = "p-Xylene"; $others_max = 2e-2; $y_max = 1 ; $breaks = 0.2;
-    } elsif ($VOC eq 'EBENZ') {
-        $name = "Ethylbenzene"; $others_max = 2; $y_max = 4 ; $breaks = 1;
-    } else {
-        print "No data found for $VOC\n";
-    }
-    return ($name, $others_max, $y_max, $breaks);
-}
-
 my $model_run = "/local/home/coates/Documents/OH_Reactivity";
 my $boxmodel = "$model_run/boxmodel";
 my $mecca = MECCA->new($boxmodel);
@@ -81,7 +26,7 @@ die "No reactions found for $reactant\n" if (@$consumers == 0) ;
 my %total_reactivity;
 foreach my $reaction (@$consumers) {
     my ($number, $parent) = split /_/, $reaction;
-    next unless (defined $parent and $parent eq $VOC);
+    next unless (defined $parent and $parent eq "TOLUENE");
     my $reactants = $kpp->reactants($reaction);
     my ($other_reactant) = grep { $_ ne $reactant } @$reactants;
     next if $other_reactant eq 'hv';
@@ -95,6 +40,7 @@ foreach my $reaction (@$consumers) {
     $total_reactivity{$other_reactant} += $reactivity(1:$ntime-2);
 }
 
+my $others_max = 7e-3;
 foreach my $process (keys %total_reactivity) {
     if ($total_reactivity{$process}->sum <= $others_max) {
         $total_reactivity{'Others'} += $total_reactivity{$process};
@@ -123,40 +69,8 @@ foreach my $ref (@final_sorted_data) {#extract reaction and rates for each plot
 my $times = $mecca->time; #time axis
 $times -= $times->at(0);
 $times = $times(1:$ntime-2);
-$times /= 3600;
+$times /= 86400;
 my @time_axis = map { $_ } $times->dog; 
-my @time_blocks;
-foreach my $time (@time_axis) {#map to day and night
-    if ($time <= 12) {
-        push @time_blocks, "Day 1";
-    } elsif ($time > 12 and $time <= 24) {
-        push @time_blocks, "Night 1";
-    } elsif ($time > 24 and $time <= 36) {
-        push @time_blocks, "Day 2";
-    } elsif ($time > 36 and $time <= 48) {
-        push @time_blocks, "Night 2";
-    } elsif ($time > 48 and $time <= 60) {
-        push @time_blocks, "Day 3",
-    } elsif ($time > 60 and $time <= 72) {
-        push @time_blocks, "Night 3";
-    } elsif ($time > 72 and $time <= 84) {
-        push @time_blocks, "Day 4";
-    } elsif ($time > 84 and $time <= 96) {
-        push @time_blocks, "Night 4";
-    } elsif ($time > 96 and $time <= 108) {
-        push @time_blocks, "Day 5";
-    } elsif ($time > 108 and $time <= 120) {
-        push @time_blocks, "Night 5";
-    } elsif ($time > 120 and $time <= 132) {
-        push @time_blocks, "Day 6";
-    } elsif ($time > 132 and $time <= 144) {
-        push @time_blocks, "Night 6";
-    } elsif ($time > 144 and $time <= 156) {
-        push @time_blocks, "Day 7";
-    } else {
-        push @time_blocks, "Night 7";
-    }
-}
 
 my $R = Statistics::R->new();
 $R->run(q` library(ggplot2) `,
@@ -166,18 +80,17 @@ $R->run(q` library(ggplot2) `,
         q` library(grid) `,
 );
 
-$R->set('Time', [@time_blocks]);
+$R->set('Time', [@time_axis]);
 $R->run(q` data = data.frame(Time) `);
 foreach my $ref (@plot_data) {
     foreach my $reactant (sort keys %$ref) {
         $R->set('Reactant', $reactant);
         $R->set('Reactivity', [@{$ref->{$reactant}}]);
-        $R->run(q` data[Reactant] = Reactivity `);
+        $R->run(q` data[Reactant] = Reactivity * 1e2 `);
     }
 }
 
-$R->run(q` data = ddply(data, .(Time), colwise(sum)) `, #arrange data
-        q` data = melt(data, id.vars = c("Time"), variable.name = "Reactant", value.name = "Reactivity") `,
+$R->run(q` data = melt(data, id.vars = c("Time"), variable.name = "Reactant", value.name = "Reactivity") `,
         q` data$Reactant = factor(data$Reactant, levels = rev(levels(data$Reactant))) `,
 );
 
@@ -222,18 +135,17 @@ $R->run(q` my.colours = c(  "CO" = "#2b9eb3" ,
                             "EBENZ" = "Ethylbenzene") `,
 );
 
-$R->set('title', "NO3 Reactivity of $name Degradation Products\n");
-$R->set('y.max', $y_max);
-$R->set('breaks', $breaks);
 $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Reactant)) `, #plot data
-        q` plot = plot + geom_bar(stat = "identity", width = 0.7) `,
-        q` plot = plot + scale_x_discrete(limits = c("Day 1", "Night 1", "Day 2", "Night 2", "Day 3", "Night 3", "Day 4", "Night 4", "Day 5", "Night 5", "Day 6", "Night 6", "Day 7", "Night 7")) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, y.max), breaks = seq(0, y.max, breaks)) `,
-        q` plot = plot + ggtitle(title) `,
-        q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ")")))) `,
+        q` plot = plot + geom_area(position = "stack") `,
+        q` plot = plot + geom_area(position = "stack", colour = "black", show_guide = FALSE) `,
+        q` plot = plot + scale_x_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) `,
+        #q` plot = plot + scale_y_continuous(limits = c(0, y.max), breaks = seq(0, y.max, breaks)) `,
+        q` plot = plot + ggtitle("NO3 Reactivity of Toluene Degradation Products") `,
+        q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ") x ", 10^2)))) `,
+        q` plot = plot + xlab("Time (days)") `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
-        q` plot = plot + theme(axis.title.x = element_blank()) `,
+        q` plot = plot + theme(axis.title.x = element_text(size = 25, face = "bold")) `,
         q` plot = plot + theme(axis.title.y = element_text(size = 25, face = "bold")) `,
         q` plot = plot + theme(axis.text.x = element_text(size = 20)) `,
         q` plot = plot + theme(axis.text.y = element_text(size = 20)) `,
@@ -248,8 +160,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = React
         q` plot = plot + scale_fill_manual(values = my.colours, labels = my.names) `,
 );
 
-$R->set('filename', "${VOC}_NO3_reactivity.pdf");
-$R->run(q` CairoPDF(file = filename, width = 20, height = 14) `, #save plot to file
+$R->run(q` CairoPDF(file = "TOLUENE_NO3_reactivity.pdf", width = 20, height = 14) `, #save plot to file
         q` print(plot) `,
         q` dev.off() `,
 );
