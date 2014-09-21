@@ -164,7 +164,7 @@ $R->run(q` plot = ggplot(data = data, aes(x = Time, y = Reactivity, fill = Proce
         q` plot = plot + geom_area(position = "stack", colour = "black", show_guide = FALSE) `,
         q` plot = plot + scale_x_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) `,
         q` plot = plot + xlab("Time (days)") `,
-        q` plot = plot + ggtitle("Allocated O3 Reactivity without NOx and HOx Contributions\n") `,
+        q` plot = plot + ggtitle("Allocated O3 Reactivity without NOx and HOx Contributions") `,
         q` plot = plot + ylab(expression(bold(paste("Reactivity (", s^-1, ") x ", 10^7)))) `,
         q` plot = plot + theme_bw() `,
         q` plot = plot + theme(plot.title = element_text(size = 32, face = "bold")) `,
