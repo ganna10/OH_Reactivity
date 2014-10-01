@@ -1,6 +1,7 @@
 #! /usr/bin/env perl
 # plot total OH reactivity and OH reactivity just of emitted initial VOC OH reactivity
 # Version 0: Jane Coates 20/9/2014
+# Version 1: Jane Coates 1/10/2014 including specific inorganic section
 
 use strict; 
 use diagnostics;
@@ -17,7 +18,8 @@ my $mecca = MECCA->new($boxmodel);
 my $eqn = "$model_run/gas.eqn";
 my $kpp = KPP->new($eqn);
 my $NTIME = $mecca->time->nelem;
-my @all_species = qw( NO NO2 O3 CO CH4 C2H6 C3H8 NC4H10 IC4H10 NC5H12 IC5H12 NC6H14 NC7H16 NC8H18 C2H4 C3H6 BUT1ENE MEPROPENE C5H8 BENZENE TOLUENE MXYL OXYL PXYL EBENZ );
+my @organic = qw( CO CH4 C2H6 C3H8 NC4H10 IC4H10 NC5H12 IC5H12 NC6H14 NC7H16 NC8H18 C2H4 C3H6 BUT1ENE MEPROPENE C5H8 BENZENE TOLUENE MXYL OXYL PXYL EBENZ );
+my @inorganic = qw( NO NO2 O3  );
 
 my $reactant = 'OH';
 my $cair = $mecca->cair;
@@ -37,8 +39,10 @@ foreach my $reaction (@$consumers) {
     next if ($reactivity->sum == 0);
     my ($number, $parent) = split /_/, $reaction;
     $total_reactivity{'Total'} += $reactivity(1:$NTIME-2); 
-    if ($other_reactant ~~ @all_species) {
-        $total_reactivity{'Parents'} += $reactivity(1:$NTIME-2);
+    if ($other_reactant ~~ @organic) {
+        $total_reactivity{'VOCs'} += $reactivity(1:$NTIME-2);
+    } elsif ($other_reactant ~~ @inorganic) {
+        $total_reactivity{'Inorganic'} += $reactivity(1:$NTIME-2);
     }
 }
 
@@ -64,7 +68,7 @@ foreach my $item (sort keys %total_reactivity) {
     $R->run(q` data[run] = reactivity `);
 }
 
-$R->run(q` data$Total = data$Total - data$Parents `);
+$R->run(q` data$Total = data$Total - data$VOCs - data$Inorganic `);
 $R->run(q` data = melt(data, id.vars = c("Time"), variable.name = "Run", value.name = "OH.Reactivity") `);
 
 $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
@@ -91,7 +95,7 @@ $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
         q` plot = plot + theme(legend.position = c(0.99, 0.5)) `,
         q` plot = plot + theme(legend.justification = c(0.99, 0.5)) `,
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
-        q` plot = plot + scale_fill_manual(values = c("#2b9eb3", "#8c1531"), breaks = rev(levels(data$Run)), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity")) `,
+        q` plot = plot + scale_fill_manual(values = c("#2b9eb3", "#f9c500", "#8c1531"), breaks = rev(levels(data$Run)), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity", "Inorganic OH Reactivity")) `,
 );
 
 $R->run(q` CairoPDF(file = "Total_vs_parents_OH_reactivity.pdf", width = 20, height = 14) `,
