@@ -56,10 +56,13 @@ foreach my $VOC (@parents) {
 
     my @final_sorted_data;
     foreach (@sorted_data) { 
-        next if ($_ eq 'Others') ;
+        next if ($_ eq 'Others' or $_ eq "CO" or $_ eq "HCHO" or $_ eq $VOC) ;
         push @final_sorted_data, { $_ => $total_reactivity{$_} };
     } 
     push @final_sorted_data, { 'Others' => $total_reactivity{'Others'} } if (defined $total_reactivity{'Others'}); 
+    unshift @final_sorted_data, { 'HCHO' => $total_reactivity{'HCHO'} } if (defined $total_reactivity{'HCHO'}); 
+    unshift @final_sorted_data, { 'CO' => $total_reactivity{'CO'} } if (defined $total_reactivity{'CO'}); 
+    unshift @final_sorted_data, { $VOC => $total_reactivity{$VOC} } if (defined $total_reactivity{$VOC}); 
 
     my @plot_data;
     foreach my $ref (@final_sorted_data) {
@@ -90,16 +93,16 @@ $R->set('Time', [@time_axis]);
 $R->run(q` plots = list() `);
 
 $R->run(q` my.colours = c(  "CO" = "#2b9eb3" , 
-                            "HCHO" = "#e7e85e" , 
+                            "HCHO" = "#f9c500" , 
                             "TOLUENE" = "#0e5c28" ,
                             "C5H8" = "#8c1531" ,
-                            "GLYOX" = "#77aecc" ,
-                            "MGLYOX" = "#f7c56c" ,
-                            "ACCOMECHO" = "#4c9383" ,
-                            "HOCH2CHO" = "#ba8b01" ,
+                            "GLYOX" = "#dc3522" ,
+                            "MGLYOX" = "#4c9383" ,
+                            "ACCOMECHO" = "darkgreen" ,
+                            "HOCH2CHO" = "#0352cb" ,
                             "MACR" = "#b569b3",
                             "ACETOL" = "#8ed6d2",
-                            "MVK" = "#6db875",
+                            "MVK" = "#ef6638",
                             "HCOCO2H" = "#f7c56c",
                             "MMALANHY" = "#0c3f78",
                             "C5COO2NO2" = "#cc6329",

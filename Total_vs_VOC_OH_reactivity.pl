@@ -46,6 +46,12 @@ foreach my $reaction (@$consumers) {
     }
 }
 
+my @plot_array = (
+    {'Inorganic'    => $total_reactivity{'Inorganic'}},
+    { 'VOCs'        => $total_reactivity{'VOCs'} },
+    { 'Total'       => $total_reactivity{'Total'} } ,
+);
+
 my $times = $mecca->time; #time axis
 $times -= $times->at(0);
 $times = $times(1:$NTIME-2);
@@ -62,14 +68,19 @@ $R->run(q` library(ggplot2) `,
 
 $R->set('Time', [@time_axis]);
 $R->run(q` data = data.frame(Time) `);
-foreach my $item (sort keys %total_reactivity) {
-    $R->set('run', $item);
-    $R->set('reactivity', [map { $_ } $total_reactivity{$item}->dog]);
-    $R->run(q` data[run] = reactivity `);
+foreach my $ref (@plot_array) {
+    foreach my $item (sort keys %$ref) {
+        $R->set('run', $item);
+        $R->set('reactivity', [map { $_ } $ref->{$item}->dog]);
+        $R->run(q` data[run] = reactivity `);
+    }
 }
 
 $R->run(q` data$Total = data$Total - data$VOCs - data$Inorganic `);
 $R->run(q` data = melt(data, id.vars = c("Time"), variable.name = "Run", value.name = "OH.Reactivity") `);
+$R->run(q` data$Run = factor(data$Run, levels = c("Total", "VOCs", "Inorganic")) `);
+#my $p = $R->run(q` print(data) `);
+#print $p, "\n";
 
 $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
         q` plot = plot + geom_area(position = "stack") `,
@@ -79,7 +90,6 @@ $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
         q` plot = plot + ylab(expression(bold(paste("OH Reactivity (", s^-1, ")")))) `,
         q` plot = plot + ggtitle("Total OH Reactivity and Emitted VOC OH Reactivity") `,
         q` plot = plot + scale_x_continuous(limits = c(0, 7), breaks = seq(0, 7, 1)) `,
-        q` plot = plot + scale_y_continuous(limits = c(0, 8.5), breaks = seq(0, 8.5, 2)) `,
         q` plot = plot + theme(panel.grid.major = element_blank()) `,
         q` plot = plot + theme(panel.grid.minor = element_blank()) `,
         q` plot = plot + theme(panel.border = element_blank()) `,
@@ -92,10 +102,10 @@ $R->run(q` plot = ggplot(data, aes(x = Time, y = OH.Reactivity, fill = Run)) `,
         q` plot = plot + theme(legend.title = element_blank()) `,
         q` plot = plot + theme(legend.text = element_text(size = 25)) `,
         q` plot = plot + theme(legend.key = element_blank()) `,
-        q` plot = plot + theme(legend.position = c(0.99, 0.5)) `,
-        q` plot = plot + theme(legend.justification = c(0.99, 0.5)) `,
+        q` plot = plot + theme(legend.position = c(0.99, 0.6)) `,
+        q` plot = plot + theme(legend.justification = c(0.99, 0.6)) `,
         q` plot = plot + theme(legend.key.size = unit(1.3, "cm")) `,
-        q` plot = plot + scale_fill_manual(values = c("#2b9eb3", "#f9c500", "#8c1531"), breaks = rev(levels(data$Run)), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity", "Inorganic OH Reactivity")) `,
+        q` plot = plot + scale_fill_manual(values = c("#2b9eb3", "#f9c500", "#8c1531"), labels = c("Total OH Reactivity", "Emitted VOC OH Reactivity", "Inorganic OH Reactivity")) `,
 );
 
 $R->run(q` CairoPDF(file = "Total_vs_parents_OH_reactivity.pdf", width = 20, height = 14) `,
